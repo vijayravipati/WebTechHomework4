@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+	<title>Homework 4</title>
+<style>
+table, th, td {
+    border: 1px solid black;
+}
+p{
+	font-weight:bold;
+	font-size:24px;
+}
+button{
+	border-radius: 3px 3px 3px 3px;
+	background-color: #e5e2e2;
+}
+</style>
+<body>
+	<div align="center">
+		<form method="post">
+			<p>Enter URL for Newspaper List XML File</p>
+			<input type="text" id="inputURL" size="30" />
+			<br /><br />
+			<button type="button" onclick="displayXML(this.form)">Submit Query</button>
+		</form>
+	</div>
+<p id="demo"> </p>
+
+<script>
+
+function displayXML(form) {
+    var xmlurl = form.getElementsByTagName("input")[0];
+    if (xmlurl.value == "") {
+        alert("Please enter an XML ");
+    } else {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                myFunction(this);
+            }
+            if (this.readyState == 4 && this.status == 404) {
+                alert("File does not exists");
+            }
+
+        };
+        xhttp.open("GET", xmlurl.value, true);
+        xhttp.send();
+    }
+}
+
+function myFunction(xml) {
+    var parser = new DOMParser();
+    xmlDoc1 = parser.parseFromString(xml.response, "text/xml");
+    var emptydata = null;
+    if(xmlDoc1.activeElement){
+	emptydata = xmlDoc1.activeElement.firstChild.nodeValue;
+	}
+	var emptystring = "XML Parsing Error: not well-formed";
+
+	var errorstring = "XML Parsing Error: mismatched";
+	var errorstring1 ="XML Parsing Error: XML or text declaration not at start of entity";
+    var xmlDoc = xml.responseXML;
+    if (xmlDoc == null || (emptydata != null && (emptydata.indexOf(errorstring) != -1 || emptydata.indexOf(errorstring1) != -1))) {
+        alert("Error in XML file");
+    } else if (xmlDoc == null || (emptydata != null && emptydata.indexOf(emptystring) != -1)) {
+        alert("No newslist exists");
+    } else
+
+    {
+        var tableHeader = xmlDoc.getElementsByTagName("Header")[0].children;
+        var rows = xmlDoc.getElementsByTagName("Row");
+        if(rows.length == 0)
+        {
+        	alert("News list is empty");
+        }else{
+        var table = document.createElement("table");
+        table.setAttribute("border", "1px solid black");
+        var tr = document.createElement("tr");
+
+        for (var i = 0; i < tableHeader.length; i++) {
+
+            var thead = document.createElement("th");
+            thead.setAttribute("border", "1px solid black");
+            var headvalue = tableHeader[i].innerHTML;
+            thead.innerHTML = headvalue;
+            tr.appendChild(thead);
+            table.appendChild(tr);
+        }
+        
+        for (var j = 0; j < rows.length; j++) {
+            var rowtr = document.createElement("tr");
+            for (var k = 0; k < rows[j].children.length; k++) {
+                var rowtd = document.createElement("td");
+                rowtd.setAttribute("border", "1px solid black");
+                rowtd.setAttribute("height","200px");
+                var tdvalue = rows[j].children[k].innerHTML;
+                var tagName = rows[j].children[k].tagName;
+                if (tagName != "Location" && tagName != "HomePage" && tagName != "Logo") {
+                    rowtd.innerHTML = tdvalue;
+                }
+                if (tagName === "Location") {
+                    var ul = document.createElement("ul");
+                    for (var l = 0; l < rows[j].children[k].children.length; l++) {
+                        var li = document.createElement("li");
+                        li.innerHTML = rows[j].children[k].children[l].innerHTML;
+                        ul.appendChild(li);
+
+                    }
+                    rowtd.appendChild(ul);
+                }
+                if (tagName === "HomePage") {
+                    var a = document.createElement("a");
+                    a.setAttribute("href", tdvalue);
+                    a.innerHTML = tdvalue;
+                    rowtd.appendChild(a);
+                }
+                if (tagName === "Logo") {
+                    var image = document.createElement("img");
+                    image.setAttribute("src", tdvalue);
+                    image.setAttribute("alt", "Newspaper Logo");
+                    rowtd.appendChild(image);
+                }
+                rowtr.appendChild(rowtd);
+            }
+            table.appendChild(rowtr);
+
+        }
+        var newWindow = window.open("index.html", "_blank", "scrollbars=yes,width=auto,height=auto");
+        newWindow.document.open();
+        newWindow.document.write(table);
+        newWindow.document.title = "Online Newspaper Listings";
+        newWindow.document.body.removeChild(newWindow.document.body.childNodes[0]);
+        newWindow.document.body.appendChild(table);
+        newWindow.document.close();
+        
+    }
+    }
+}
+</script>
+<noscript>
+</body>
+</html>
